@@ -1,12 +1,12 @@
 <?php
 
-namespace Rdcstarr\LaravelMedia;
+namespace Rdcstarr\Media;
 
-use Rdcstarr\LaravelMedia\Enums\AudioExtension;
-use Rdcstarr\LaravelMedia\Enums\ImageExtension;
-use Rdcstarr\LaravelMedia\Enums\MediaType;
-use Rdcstarr\LaravelMedia\Enums\VideoExtension;
-use Rdcstarr\LaravelMedia\Traits\HasMedia;
+use Rdcstarr\Media\Enums\AudioExtension;
+use Rdcstarr\Media\Enums\ImageExtension;
+use Rdcstarr\Media\Enums\MediaType;
+use Rdcstarr\Media\Enums\VideoExtension;
+use Rdcstarr\Media\Traits\HasMedia;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -22,7 +22,7 @@ use RuntimeException;
 use Spatie\Image\Enums\Fit;
 use Spatie\Image\Image;
 
-class LaravelMedia
+class MediaService
 {
 	protected Model $model;
 	protected mixed $file = null;
@@ -32,7 +32,7 @@ class LaravelMedia
 	protected bool $useOriginalFileName = false;
 
 	/**
-	 * Create a new LaravelMedia instance for the given model.
+	 * Create a new Media instance for the given model.
 	 *
 	 * @param Model $model The model that uses HasMedia trait
 	 * @throws InvalidArgumentException

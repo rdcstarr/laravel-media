@@ -1,14 +1,14 @@
 <?php
 
-namespace Rdcstarr\LaravelMedia\Commands;
+namespace Rdcstarr\Media\Commands;
 
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Rdcstarr\LaravelMedia\Models\Media;
+use Rdcstarr\Media\Models\Media;
 
-class CleanupLaravelMediaCommand extends Command
+class CleanupMediaCommand extends Command
 {
 	public $signature = 'laravel-media:cleanup
                         {--dry-run : Show what would be deleted without actually deleting}

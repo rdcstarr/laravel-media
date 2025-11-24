@@ -1,16 +1,16 @@
 <?php
 
-namespace Rdcstarr\LaravelMedia\Models;
+namespace Rdcstarr\Media\Models;
 
 use Exception;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Storage;
-use Rdcstarr\LaravelMedia\Casts\MediaExtensionCast;
-use Rdcstarr\LaravelMedia\Events\MediaCreated;
-use Rdcstarr\LaravelMedia\Events\MediaDeleted;
-use Rdcstarr\LaravelMedia\Events\MediaUpdated;
+use Rdcstarr\Media\Casts\MediaExtensionCast;
+use Rdcstarr\Media\Events\MediaCreated;
+use Rdcstarr\Media\Events\MediaDeleted;
+use Rdcstarr\Media\Events\MediaUpdated;
 
 class Media extends Model
 {

@@ -1,22 +1,16 @@
 <?php
 
-namespace Rdcstarr\LaravelMedia\Facades;
+namespace Rdcstarr\Media\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \Rdcstarr\LaravelMedia\LaravelMedia
- *
- * @method static \Rdcstarr\LaravelMedia\LaravelMedia __construct(\Illuminate\Database\Eloquent\Model $model)
- * @method static self file(mixed $file)
- * @method static \Illuminate\Support\Collection addToCollection(string $collection, string $name = '', string $path = '', array $metadata = [])
- * @method static self replaceExisting(bool $state = true)
- * @method static self keepOriginalFileName(bool $state = true)
+ * @see \Rdcstarr\Media\MediaService
  */
-class LaravelMedia extends Facade
+class Media extends Facade
 {
 	protected static function getFacadeAccessor(): string
 	{
-		return \Rdcstarr\LaravelMedia\LaravelMedia::class;
+		return \Rdcstarr\Media\MediaService::class;
 	}
 }

@@ -46,8 +46,8 @@ php artisan vendor:publish --tag="laravel-media-config"
 ### Setup Model
 
 ```php
-use Rdcstarr\LaravelMedia\Traits\HasMedia;
-use Rdcstarr\LaravelMedia\Enums\{MediaType, ImageExtension};
+use Rdcstarr\Media\Traits\HasMedia;
+use Rdcstarr\Media\Enums\{MediaType, ImageExtension};
 
 class Product extends Model
 {

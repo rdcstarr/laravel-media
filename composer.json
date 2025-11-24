@@ -31,13 +31,13 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Rdcstarr\\LaravelMedia\\": "src/",
-			"Rdcstarr\\LaravelMedia\\Database\\Factories\\": "database/factories/"
+			"Rdcstarr\\Media\\": "src/",
+			"Rdcstarr\\Media\\Database\\Factories\\": "database/factories/"
 		}
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"Rdcstarr\\LaravelMedia\\Tests\\": "tests/",
+			"Rdcstarr\\Media\\Tests\\": "tests/",
 			"Workbench\\App\\": "workbench/app/"
 		}
 	},
@@ -59,10 +59,10 @@
 	"extra": {
 		"laravel": {
 			"providers": [
-				"Rdcstarr\\LaravelMedia\\LaravelMediaServiceProvider"
+				"Rdcstarr\\Media\\MediaServiceProvider"
 			],
 			"aliases": {
-				"LaravelMedia": "Rdcstarr\\LaravelMedia\\Facades\\LaravelMedia"
+				"Media": "Rdcstarr\\Media\\Facades\\Media"
 			}
 		}
 	},

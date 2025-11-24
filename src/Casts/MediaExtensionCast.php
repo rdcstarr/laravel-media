@@ -1,12 +1,12 @@
 <?php
 
-namespace Rdcstarr\LaravelMedia\Casts;
+namespace Rdcstarr\Media\Casts;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
-use Rdcstarr\LaravelMedia\Enums\AudioExtension;
-use Rdcstarr\LaravelMedia\Enums\ImageExtension;
-use Rdcstarr\LaravelMedia\Enums\VideoExtension;
+use Rdcstarr\Media\Enums\AudioExtension;
+use Rdcstarr\Media\Enums\ImageExtension;
+use Rdcstarr\Media\Enums\VideoExtension;
 
 class MediaExtensionCast implements CastsAttributes
 {

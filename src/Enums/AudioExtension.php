@@ -1,6 +1,6 @@
 <?php
 
-namespace Rdcstarr\LaravelMedia\Enums;
+namespace Rdcstarr\Media\Enums;
 
 enum AudioExtension: string
 {

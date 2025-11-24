@@ -1,11 +1,11 @@
 <?php
 
-namespace Rdcstarr\LaravelMedia\Events;
+namespace Rdcstarr\Media\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Rdcstarr\LaravelMedia\Models\Media;
+use Rdcstarr\Media\Models\Media;
 
 class MediaCreated
 {

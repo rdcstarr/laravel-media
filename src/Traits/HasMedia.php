@@ -1,22 +1,22 @@
 <?php
 
-namespace Rdcstarr\LaravelMedia\Traits;
+namespace Rdcstarr\Media\Traits;
 
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
-use Rdcstarr\LaravelMedia\LaravelMedia;
-use Rdcstarr\LaravelMedia\Models\Media;
+use Rdcstarr\Media\MediaService;
+use Rdcstarr\Media\Models\Media;
 
 trait HasMedia
 {
 	/**
-	 * Create a new LaravelMedia instance for this model.
+	 * Create a new MediaService instance for this model.
 	 *
-	 * @return LaravelMedia
+	 * @return MediaService
 	 */
-	public function attachMedia(): LaravelMedia
+	public function attachMedia(): MediaService
 	{
-		return new LaravelMedia($this);
+		return new MediaService($this);
 	}
 
 	public function __call($method, $parameters)
