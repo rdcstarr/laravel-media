@@ -11,12 +11,12 @@ use Rdcstarr\Media\Models\Media;
 class CleanupMediaCommand extends Command
 {
 	public $signature = 'laravel-media:cleanup
-                        {--dry-run : Show what would be deleted without actually deleting}
-                        {--orphaned : Clean orphaned media records (models deleted)}
-                        {--missing : Clean media records with missing files}
-                        {--unused : Clean files in storage without media records}
-                        {--all : Run all cleanup operations}';
-//
+		{--dry-run : Show what would be deleted without actually deleting}
+		{--orphaned : Clean orphaned media records (models deleted)}
+		{--missing : Clean media records with missing files}
+		{--unused : Clean files in storage without media records}
+		{--all : Run all cleanup operations}';
+
 	public $description = 'Clean up orphaned media files and records';
 
 	public function handle()
