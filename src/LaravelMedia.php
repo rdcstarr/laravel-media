@@ -2,6 +2,10 @@
 
 namespace Rdcstarr\LaravelMedia;
 
+use Rdcstarr\LaravelMedia\Enums\AudioExtension;
+use Rdcstarr\LaravelMedia\Enums\ImageExtension;
+use Rdcstarr\LaravelMedia\Enums\MediaType;
+use Rdcstarr\LaravelMedia\Enums\VideoExtension;
 use Rdcstarr\LaravelMedia\Traits\HasMedia;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -121,14 +125,14 @@ class LaravelMedia
 			$this->shouldClearCollection = false;
 		}
 
-		$type = $config['type'] ?? $this->detectType($this->file);
+		$type = $this->resolveMediaType($config['type'] ?? null);
 
 		return match ($type)
 		{
-			'image' => $this->processImage($config, $metadata),
-			'video' => $this->processVideo($config, $metadata),
-			'audio' => $this->processAudio($config, $metadata),
-			default => $this->processFile($config, $metadata),
+			MediaType::Image => $this->processImage($config, $metadata),
+			MediaType::Video => $this->processVideo($config, $metadata),
+			MediaType::Audio => $this->processAudio($config, $metadata),
+			MediaType::File => $this->processFile($config, $metadata),
 		};
 	}
 
@@ -307,11 +311,15 @@ class LaravelMedia
 			{
 				if (is_int($key))
 				{
-					$normalized[strtolower($value)] = 100;
+					// Numeric key: value is extension
+					$ext              = $this->extractExtensionValue($value);
+					$normalized[$ext] = 100;
 					continue;
 				}
 
-				$normalized[strtolower($key)] = is_int($value) ? $value : 100;
+				// String/Enum key: key is extension, value is quality
+				$ext              = $this->extractExtensionValue($key);
+				$normalized[$ext] = is_int($value) ? $value : 100;
 			}
 
 			return $normalized;
@@ -405,7 +413,8 @@ class LaravelMedia
 
 			foreach ($config['extensions'] as $key => $value)
 			{
-				$normalized[] = strtolower(ltrim(is_int($key) ? (string) $value : (string) $key, '.'));
+				$ext          = is_int($key) ? $value : $key;
+				$normalized[] = $this->extractExtensionValue($ext);
 			}
 
 			return array_values(array_unique(array_filter($normalized)));
@@ -421,6 +430,22 @@ class LaravelMedia
 		return $guessed ? [strtolower($guessed)] : [];
 	}
 
+	/**
+	 * Extract extension value from enum or string.
+	 *
+	 * @param mixed $extension
+	 * @return string
+	 */
+	protected function extractExtensionValue(mixed $extension): string
+	{
+		if ($extension instanceof ImageExtension || $extension instanceof VideoExtension || $extension instanceof AudioExtension)
+		{
+			return $extension->value;
+		}
+
+		return strtolower(ltrim((string) $extension, '.'));
+	}
+
 	protected function guessExtension(UploadedFile $file): ?string
 	{
 		return strtolower(
@@ -431,17 +456,48 @@ class LaravelMedia
 		) ?: null;
 	}
 
-	protected function detectType(UploadedFile $file): string
+	protected function detectType(UploadedFile $file): MediaType
 	{
 		$mimeType = $file->getMimeType();
 
 		return match (true)
 		{
-			str_starts_with($mimeType, 'image/') => 'image',
-			str_starts_with($mimeType, 'video/') => 'video',
-			str_starts_with($mimeType, 'audio/') => 'audio',
-			default => 'file',
+			str_starts_with($mimeType, 'image/') => MediaType::Image,
+			str_starts_with($mimeType, 'video/') => MediaType::Video,
+			str_starts_with($mimeType, 'audio/') => MediaType::Audio,
+			default => MediaType::File,
 		};
+	}
+
+	/**
+	 * Resolve media type from config value or detect from file.
+	 *
+	 * @param string|MediaType|null $type
+	 * @return MediaType
+	 */
+	protected function resolveMediaType(string|MediaType|null $type): MediaType
+	{
+		if ($type instanceof MediaType)
+		{
+			return $type;
+		}
+
+		if (is_string($type))
+		{
+			$enum = MediaType::tryFrom($type);
+
+			if ($enum === null)
+			{
+				throw new InvalidArgumentException(
+					"Invalid media type '{$type}'. Allowed values: " .
+					collect(MediaType::cases())->pluck('value')->join(', ')
+				);
+			}
+
+			return $enum;
+		}
+
+		return $this->detectType($this->file);
 	}
 
 	/**

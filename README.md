@@ -43,13 +43,11 @@ php artisan vendor:publish --tag="laravel-media-config"
 
 ## Usage
 
-### 1. Prepare Your Model
-
-Add the `HasMedia` trait to your model and implement the `mediaCollection()` method:
+### Setup Model
 
 ```php
-use Illuminate\Database\Eloquent\Model;
 use Rdcstarr\LaravelMedia\Traits\HasMedia;
+use Rdcstarr\LaravelMedia\Enums\{MediaType, ImageExtension};
 
 class Product extends Model
 {
@@ -59,196 +57,67 @@ class Product extends Model
     {
         return [
             'thumbnail' => [
-                'type' => 'image',
-                'disk' => 'public',
-                'path' => 'products/thumbnails',
+                'type' => MediaType::Image,
                 'width' => 300,
                 'height' => 300,
-                'fit' => 'contain',
-                'extensions' => [
-                    'webp' => 90,
-                    'jpg' => 85,
-                ],
+                'extensions' => [ImageExtension::WEBP => 90, ImageExtension::JPG => 85],
             ],
             'gallery' => [
-                'type' => 'image',
-                'disk' => 'public',
-                'path' => 'products/gallery',
+                'type' => MediaType::Image,
                 'width' => 1200,
-                'extensions' => [
-                    'webp' => 90,
-                    'avif' => 80,
-                ],
-            ],
-            'documents' => [
-                'type' => 'file',
-                'disk' => 'public',
-                'path' => 'products/documents',
-                'extensions' => ['pdf'],
+                'extensions' => [ImageExtension::WEBP => 90, ImageExtension::AVIF => 80],
             ],
         ];
     }
 }
 ```
 
-### 2. Upload Media Files
+### Upload & Retrieve
 
 ```php
-use Illuminate\Http\UploadedFile;
+// Upload
+$product->attachMedia()->file($request->file('image'))->addToCollection('gallery');
+$product->attachMedia()->file('https://example.com/image.jpg')->replaceExisting()->addToCollection('thumbnail');
 
-$product = Product::find(1);
-
-// Upload an image from request
-$product->attachMedia()
-    ->file($request->file('thumbnail'))
-    ->addToCollection('thumbnail');
-
-// Upload from URL
-$product->attachMedia()
-    ->file('https://example.com/image.jpg')
-    ->addToCollection('gallery');
-
-// Replace existing media in collection
-$product->attachMedia()
-    ->file($request->file('thumbnail'))
-    ->replaceExisting()
-    ->addToCollection('thumbnail');
-
-// Keep original filename
-$product->attachMedia()
-    ->file($request->file('document'))
-    ->keepOriginalFileName()
-    ->addToCollection('documents');
-
-// Add custom metadata
-$product->attachMedia()
-    ->file($request->file('image'))
-    ->addToCollection('gallery', '', '', [
-        'alt_text' => 'Product showcase',
-        'caption' => 'Summer collection 2024',
-    ]);
-```
-
-### 3. Retrieve Media
-
-```php
-// Get media collection
-$thumbnails = $product->getMediaCollection('thumbnail');
-
-// Get specific media URL
+// Retrieve
 $url = $product->getMediaUrl('thumbnail', 'webp');
-
-// Get media size
-$size = $product->getMediaSize('thumbnail', 'webp');
-
-// Get metadata
-$metadata = $product->getMediaMetaData('gallery', 'webp');
-
-// Check if media exists
-if ($product->hasMedia('thumbnail')) {
-    // ...
-}
-
-// Using magic methods (CamelCase collection names)
-$galleryCollection = $product->getMediaGalleryCollection();
-$thumbnailUrl = $product->getMediaThumbnailUrl('webp');
-$documentSize = $product->getMediaDocumentsSize('pdf');
+$product->getMediaThumbnailUrl('webp');  // Magic method
+$product->clearMediaCollection('gallery', ['jpg']);  // Delete
 ```
 
-### 4. Delete Media
+## Configuration
 
-```php
-// Clear entire collection
-$product->clearMediaCollection('gallery');
-
-// Clear specific extensions from collection
-$product->clearMediaCollection('gallery', ['jpg', 'png']);
-
-// Media files are automatically deleted when:
-// - The media record is deleted
-// - The parent model is deleted (respects soft deletes)
-// - A media file is replaced in a collection
-```
-
-## Configuration Options
-
-### Collection Configuration
-
-Each collection in `mediaCollection()` supports these options:
+### Collection Options
 
 ```php
 [
-    'type' => 'image|video|audio|file',  // Media type (default: auto-detected)
-    'disk' => 'public',                   // Storage disk (default: 'public')
-    'path' => '{model}/{collection}',     // Storage path (supports placeholders)
-    'name' => '{ulid}',                   // Filename pattern (supports placeholders)
-    'visibility' => 'public|private',     // File visibility (optional)
-
-    // Image-specific options
-    'width' => 1200,                      // Target width in pixels
-    'height' => 800,                      // Target height in pixels
-    'fit' => 'contain|cover|fill|...',    // Spatie\Image\Enums\Fit value
-    'extensions' => [                     // Output formats with quality
-        'webp' => 90,
-        'avif' => 80,
-        'jpg' => 85,
+    'type' => MediaType::Image,           // Media type (Image|Video|Audio|File)
+    'disk' => 'public',                   // Storage disk
+    'path' => '{model}/{collection}',     // Path with placeholders: {ulid}, {uuid}, {model}, {collection}
+    'name' => '{ulid}',                   // Filename pattern
+    'visibility' => 'public',             // File visibility
+    'width' => 1200,                      // Image width (px)
+    'height' => 800,                      // Image height (px)
+    'fit' => 'contain',                   // Fit mode (contain|cover|fill)
+    'extensions' => [                     // Formats with quality
+        ImageExtension::WEBP => 90,
+        ImageExtension::AVIF => 80,
     ],
-
-    // Non-image file options
-    'extension' => 'pdf',                 // Single extension for non-images
-    'extensions' => ['pdf', 'doc'],       // Multiple extensions for non-images
 ]
 ```
 
-### Path and Name Placeholders
+### Enums (Type-Safe)
 
-Available placeholders for `path` and `name`:
+-   **MediaType**: `Image`, `Video`, `Audio`, `File`
+-   **ImageExtension**: `JPEG`, `JPG`, `PNG`, `WEBP`, `AVIF`, `GIF`, `SVG`, `BMP`, `TIFF`
+-   **VideoExtension**: `MP4`, `WEBM`, `OGG`, `AVI`, `MOV`, `WMV`, `FLV`, `MKV`, `M4V`
+-   **AudioExtension**: `MP3`, `WAV`, `OGG`, `M4A`, `AAC`, `FLAC`, `WMA`, `OPUS`
 
--   `{ulid}` - Generates a ULID (default for name)
--   `{uuid}` - Generates a UUID
--   `{model}` - Lowercase model class name
--   `{collection}` - Collection name
+## Events & Architecture
 
-Example:
+**Events:** `MediaCreated`, `MediaUpdated`, `MediaDeleted`
 
-```php
-'path' => '{model}/{collection}/{ulid}',  // products/gallery/01HQXYZ...
-'name' => 'img-{uuid}',                   // img-123e4567-e89b...
-```
-
-## Events
-
-The package dispatches the following events:
-
--   `Rdcstarr\LaravelMedia\Events\MediaCreated`
--   `Rdcstarr\LaravelMedia\Events\MediaUpdated`
--   `Rdcstarr\LaravelMedia\Events\MediaDeleted`
-
-Listen to these events in your `EventServiceProvider`:
-
-```php
-protected $listen = [
-    \Rdcstarr\LaravelMedia\Events\MediaCreated::class => [
-        \App\Listeners\ProcessMediaCreated::class,
-    ],
-];
-```
-
-## Architecture
-
-The package is built with a **model-centric architecture**:
-
-1. **LaravelMedia** class requires a model instance in the constructor
-2. Models using **HasMedia** trait get an `attachMedia()` helper method
-3. All media operations are tied to the parent model
-4. Files are automatically cleaned up when models or media are deleted
-
-This design ensures:
-
--   Type safety and validation at instantiation
--   Clear ownership of media files
--   Automatic lifecycle management
--   No orphaned files in storage
+**Model-centric design:** All operations require a model instance, ensuring type safety, clear ownership, and automatic cleanup of files when models or media are deleted.
 
 ## 🧪 Testing
 

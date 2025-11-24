@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Storage;
+use Rdcstarr\LaravelMedia\Casts\MediaExtensionCast;
 use Rdcstarr\LaravelMedia\Events\MediaCreated;
 use Rdcstarr\LaravelMedia\Events\MediaDeleted;
 use Rdcstarr\LaravelMedia\Events\MediaUpdated;
@@ -27,8 +28,9 @@ class Media extends Model
 	];
 
 	protected $casts = [
-		'size'     => 'integer',
-		'metadata' => 'array',
+		'size'      => 'integer',
+		'metadata'  => 'array',
+		'extension' => MediaExtensionCast::class,
 	];
 
 	protected $appends = [
