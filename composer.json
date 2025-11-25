@@ -31,8 +31,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Rdcstarr\\Media\\": "src/",
-			"Rdcstarr\\Media\\Database\\Factories\\": "database/factories/"
+			"Rdcstarr\\Media\\": "src/"
 		}
 	},
 	"autoload-dev": {

@@ -28,17 +28,28 @@ You can install the package via composer:
 composer require rdcstarr/laravel-media
 ```
 
-You can publish and run the migrations with:
+### Automatic Installation (Recommended)
+
+Run the install command to publish and run the migrations:
 
 ```bash
-php artisan vendor:publish --tag="laravel-media-migrations"
-php artisan migrate
+php artisan media:install
 ```
 
-You can publish the config file with:
+### Manual Installation
+
+Alternatively, you can install manually:
+
+1. Publish the migrations:
 
 ```bash
-php artisan vendor:publish --tag="laravel-media-config"
+php artisan vendor:publish --provider="Rdcstarr\Media\MediaServiceProvider" --tag="laravel-media-migrations"
+```
+
+2. Run the migrations:
+
+```bash
+php artisan migrate
 ```
 
 ## Usage
