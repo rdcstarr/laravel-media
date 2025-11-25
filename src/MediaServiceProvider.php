@@ -3,20 +3,31 @@
 namespace Rdcstarr\Media;
 
 use Rdcstarr\Media\Commands\CleanupMediaCommand;
-use Rdcstarr\Media\Commands\InstallMediaCommand;
+use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class MediaServiceProvider extends PackageServiceProvider
 {
+	/*
+	 * This class is a Package Service Provider
+	 *
+	 * More info: https://github.com/spatie/laravel-package-tools
+	 */
 	public function configurePackage(Package $package): void
 	{
 		$package
 			->name('laravel-media')
-			->hasMigration('create_media_table')
+			->discoversMigrations()
+			->runsMigrations()
 			->hasCommands([
-				InstallMediaCommand::class,
 				CleanupMediaCommand::class,
-			]);
+			])
+			->hasInstallCommand(function (InstallCommand $command)
+			{
+				$command
+					->publishMigrations()
+					->askToRunMigrations();
+			});
 	}
 }
