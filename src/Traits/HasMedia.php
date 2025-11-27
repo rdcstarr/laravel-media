@@ -19,6 +19,13 @@ trait HasMedia
 		return new MediaService($this);
 	}
 
+	/**
+	 * Handle dynamic method calls for media operations.
+	 *
+	 * @param string $method
+	 * @param array $parameters
+	 * @return mixed
+	 */
 	public function __call($method, $parameters)
 	{
 		if ($match = Str::match('/^getMedia(.+)Collection$/', $method))
@@ -32,10 +39,10 @@ trait HasMedia
 		{
 			$collection = Str::snake($match);
 			$extension  = $parameters[0] ?? null;
+			$default    = $parameters[1] ?? null;
 
-			return $this->getMediaUrl($collection, $extension);
+			return $this->getMediaUrl($collection, $extension, $default);
 		}
-
 		if ($match = Str::match('/^getMedia(.+)Size$/', $method))
 		{
 			$collection = Str::snake($match);
@@ -55,11 +62,22 @@ trait HasMedia
 		return parent::__call($method, $parameters);
 	}
 
+	/**
+	 * Get all media for this model.
+	 *
+	 * @return MorphMany
+	 */
 	public function media(): MorphMany
 	{
 		return $this->morphMany(Media::class, 'mediable');
 	}
 
+	/**
+	 * Get all media items from a specific collection, keyed by extension.
+	 *
+	 * @param string $collection
+	 * @return \Illuminate\Support\Collection
+	 */
 	public function getMediaCollection(string $collection)
 	{
 		if ($this->relationLoaded('media'))
@@ -70,26 +88,62 @@ trait HasMedia
 		return $this->media()->where('collection', $collection)->get()->keyBy('extension');
 	}
 
-	public function getMediaUrl(string $collection, ?string $extension = null)
+	/**
+	 * Get the URL of a media item from a collection.
+	 *
+	 * @param string $collection
+	 * @param string|null $extension
+	 * @param string|null $default
+	 * @return string|null
+	 */
+	public function getMediaUrl(string $collection, ?string $extension = null, ?string $default = null)
 	{
-		return $this->findMedia($collection, $extension)?->url;
+		return $this->findMedia($collection, $extension)?->url ?? $default;
 	}
 
+	/**
+	 * Get the size of a media item from a collection.
+	 *
+	 * @param string $collection
+	 * @param string|null $extension
+	 * @return int|null
+	 */
 	public function getMediaSize(string $collection, ?string $extension = null)
 	{
 		return $this->findMedia($collection, $extension)?->size;
 	}
 
+	/**
+	 * Get the metadata of a media item from a collection.
+	 *
+	 * @param string $collection
+	 * @param string|null $extension
+	 * @return array|null
+	 */
 	public function getMediaMetaData(string $collection, ?string $extension = null)
 	{
 		return $this->findMedia($collection, $extension)?->metadata;
 	}
 
+	/**
+	 * Check if the model has media in a specific collection.
+	 *
+	 * @param string $collection
+	 * @param string|null $extension
+	 * @return bool
+	 */
 	public function hasMedia(string $collection, ?string $extension = null): bool
 	{
 		return $this->findMedia($collection, $extension) !== null;
 	}
 
+	/**
+	 * Clear all media from a collection, optionally filtered by extensions.
+	 *
+	 * @param string $collection
+	 * @param array|null $extensions
+	 * @return void
+	 */
 	public function clearMediaCollection(string $collection, ?array $extensions = null): void
 	{
 		$this->loadMissing('media');
@@ -104,6 +158,13 @@ trait HasMedia
 		$mediaItems->each(fn(Media $media) => $media->delete());
 	}
 
+	/**
+	 * Find a specific media item in a collection.
+	 *
+	 * @param string $collection
+	 * @param string|null $extension
+	 * @return Media|null
+	 */
 	protected function findMedia(string $collection, ?string $extension = null): ?Media
 	{
 		if ($this->relationLoaded('media'))
@@ -135,7 +196,6 @@ trait HasMedia
 	{
 		static::deleting(function ($model)
 		{
-			// Only delete media if it's a force delete or model doesn't use soft deletes
 			if (method_exists($model, 'isForceDeleting') && !$model->isForceDeleting())
 			{
 				return;
