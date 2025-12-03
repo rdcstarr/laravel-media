@@ -172,14 +172,15 @@ class MediaService
 	 */
 	protected function processImage(array $config = [], array $metadata = []): Collection
 	{
-		$name       = $this->resolveFileName($config['name'] ?? null);
-		$path       = $this->resolvePath($config['path'] ?? null);
-		$disk       = $config['disk'] ?? 'public';
-		$storage    = Storage::disk($disk);
-		$width      = is_numeric($config['width'] ?? null) ? (int) $config['width'] : null;
-		$height     = is_numeric($config['height'] ?? null) ? (int) $config['height'] : null;
-		$fit        = $config['fit'] ?? null;
-		$visibility = $config['visibility'] ?? null;
+		$name         = $this->resolveFileName($config['name'] ?? null);
+		$path         = $this->resolvePath($config['path'] ?? null);
+		$disk         = $config['disk'] ?? 'public';
+		$storage      = Storage::disk($disk);
+		$width        = is_numeric($config['width'] ?? null) ? (int) $config['width'] : null;
+		$height       = is_numeric($config['height'] ?? null) ? (int) $config['height'] : null;
+		$fit          = $config['fit'] ?? null;
+		$visibility   = $config['visibility'] ?? null;
+		$keepOriginal = $config['keep_original'] ?? false;
 
 		$extensions = $this->resolveImageExtensions($config);
 
@@ -197,7 +198,7 @@ class MediaService
 			),
 		};
 
-		return collect($extensions)->map(function (int $quality, string $extension) use ($storage, $name, $path, $disk, $width, $height, $fitEnum, $visibility, $metadata)
+		$results = collect($extensions)->map(function (int $quality, string $extension) use ($storage, $name, $path, $disk, $width, $height, $fitEnum, $visibility, $metadata)
 		{
 			$image = Image::load($this->file->getRealPath());
 
@@ -223,6 +224,23 @@ class MediaService
 
 			return $this->persistMediaRecord($extension, $relativePath, $disk, $metadata, $storage);
 		});
+
+		if ($keepOriginal)
+		{
+			$originalExtension    = $this->guessExtension($this->file);
+			$originalRelativePath = $this->buildRelativePath($path, $name, 'original.' . $originalExtension);
+
+			$this->writeStream($storage, $originalRelativePath);
+
+			if ($visibility !== null)
+			{
+				$storage->setVisibility($originalRelativePath, $visibility);
+			}
+
+			$results->push($this->persistMediaRecord('original.' . $originalExtension, $originalRelativePath, $disk, $metadata, $storage));
+		}
+
+		return $results;
 	}
 
 	/**
@@ -337,19 +355,20 @@ class MediaService
 
 	protected function storeBinaryFile(array $config = [], array $metadata = []): Collection
 	{
-		$name       = $this->resolveFileName($config['name'] ?? null);
-		$path       = $this->resolvePath($config['path'] ?? null);
-		$disk       = $config['disk'] ?? 'public';
-		$storage    = Storage::disk($disk);
-		$visibility = $config['visibility'] ?? null;
-		$extensions = $this->normalizeExtensions($config);
+		$name         = $this->resolveFileName($config['name'] ?? null);
+		$path         = $this->resolvePath($config['path'] ?? null);
+		$disk         = $config['disk'] ?? 'public';
+		$storage      = Storage::disk($disk);
+		$visibility   = $config['visibility'] ?? null;
+		$keepOriginal = $config['keep_original'] ?? false;
+		$extensions   = $this->normalizeExtensions($config);
 
 		if (empty($extensions))
 		{
 			throw new InvalidArgumentException('Could not determine file extension for the uploaded file.');
 		}
 
-		return collect($extensions)->map(function (string $extension) use ($storage, $name, $path, $disk, $visibility, $metadata)
+		$results = collect($extensions)->map(function (string $extension) use ($storage, $name, $path, $disk, $visibility, $metadata)
 		{
 			$extension    = strtolower(ltrim($extension, '.'));
 			$relativePath = $this->buildRelativePath($path, $name, $extension);
@@ -363,6 +382,23 @@ class MediaService
 
 			return $this->persistMediaRecord($extension, $relativePath, $disk, $metadata, $storage);
 		});
+
+		if ($keepOriginal && count($extensions) > 0)
+		{
+			$originalExtension    = $this->guessExtension($this->file);
+			$originalRelativePath = $this->buildRelativePath($path, $name, 'original.' . $originalExtension);
+
+			$this->writeStream($storage, $originalRelativePath);
+
+			if ($visibility !== null)
+			{
+				$storage->setVisibility($originalRelativePath, $visibility);
+			}
+
+			$results->push($this->persistMediaRecord('original.' . $originalExtension, $originalRelativePath, $disk, $metadata, $storage));
+		}
+
+		return $results;
 	}
 
 	protected function buildRelativePath(string $path, string $name, string $extension): string

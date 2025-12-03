@@ -107,6 +107,7 @@ $product->clearMediaCollection('gallery', ['jpg']);  // Delete
     'path' => '{model}/{collection}',     // Path with placeholders: {ulid}, {uuid}, {model}, {collection}
     'name' => '{ulid}',                   // Filename pattern
     'visibility' => 'public',             // File visibility
+    'keep_original' => false,             // Keep original uploaded file (default: false)
     'width' => 1200,                      // Image width (px)
     'height' => 800,                      // Image height (px)
     'fit' => 'contain',                   // Fit mode (contain|cover|fill)

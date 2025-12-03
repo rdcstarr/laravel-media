@@ -190,6 +190,63 @@ trait HasMedia
 	}
 
 	/**
+	 * Get custom events for media collections.
+	 *
+	 * @return array
+	 */
+	public function mediaCollectionEvents(): array
+	{
+		return [];
+	}
+
+	/**
+	 * Dispatch custom event for a media collection if defined.
+	 *
+	 * @param string $collection
+	 * @param string $action 'created', 'updated', or 'deleted'
+	 * @param Media|null $media
+	 * @return void
+	 */
+	public function dispatchMediaCollectionEvent(string $collection, string $action, ?Media $media = null): void
+	{
+		$events = $this->mediaCollectionEvents();
+
+		if (!isset($events[$collection]))
+		{
+			return;
+		}
+
+		$collectionConfig = $events[$collection];
+
+		// Support for simple event class string
+		if (is_string($collectionConfig))
+		{
+			event(new $collectionConfig($this, $media, $action));
+			return;
+		}
+
+		// Support for action-specific events
+		if (is_array($collectionConfig) && isset($collectionConfig[$action]))
+		{
+			$eventClass = $collectionConfig[$action];
+
+			if (is_string($eventClass))
+			{
+				event(new $eventClass($this, $media, $action));
+			}
+			else if (is_callable($eventClass))
+			{
+				$eventClass($this, $media, $action);
+			}
+		}
+		// Support for callable
+		else if (is_callable($collectionConfig))
+		{
+			$collectionConfig($this, $media, $action);
+		}
+	}
+
+	/**
 	 * Boot the HasMedia trait for the model.
 	 */
 	protected static function bootHasMedia(): void

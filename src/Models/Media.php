@@ -52,6 +52,12 @@ class Media extends Model
 		static::created(function (Media $media)
 		{
 			event(new MediaCreated($media));
+
+			// Dispatch custom collection event
+			if ($media->mediable && method_exists($media->mediable, 'dispatchMediaCollectionEvent'))
+			{
+				$media->mediable->dispatchMediaCollectionEvent($media->collection, 'created', $media);
+			}
 		});
 
 		static::updated(function (Media $media)
@@ -86,6 +92,12 @@ class Media extends Model
 			}
 
 			event(new MediaUpdated($media));
+
+			// Dispatch custom collection event
+			if ($media->mediable && method_exists($media->mediable, 'dispatchMediaCollectionEvent'))
+			{
+				$media->mediable->dispatchMediaCollectionEvent($media->collection, 'updated', $media);
+			}
 		});
 
 		static::deleted(function (Media $media)
@@ -111,6 +123,12 @@ class Media extends Model
 			}
 
 			event(new MediaDeleted($media));
+
+			// Dispatch custom collection event
+			if ($media->mediable && method_exists($media->mediable, 'dispatchMediaCollectionEvent'))
+			{
+				$media->mediable->dispatchMediaCollectionEvent($media->collection, 'deleted', $media);
+			}
 		});
 	}
 
