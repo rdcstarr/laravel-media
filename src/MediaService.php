@@ -237,7 +237,7 @@ class MediaService
 				$storage->setVisibility($originalRelativePath, $visibility);
 			}
 
-			$results->push($this->persistMediaRecord('original.' . $originalExtension, $originalRelativePath, $disk, $metadata, $storage));
+			$results->push($this->persistMediaRecord('original', $originalRelativePath, $disk, $metadata, $storage));
 		}
 
 		return $results;
@@ -395,7 +395,7 @@ class MediaService
 				$storage->setVisibility($originalRelativePath, $visibility);
 			}
 
-			$results->push($this->persistMediaRecord('original.' . $originalExtension, $originalRelativePath, $disk, $metadata, $storage));
+			$results->push($this->persistMediaRecord('original', $originalRelativePath, $disk, $metadata, $storage));
 		}
 
 		return $results;

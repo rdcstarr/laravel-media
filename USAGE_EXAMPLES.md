@@ -65,19 +65,19 @@ class User extends Authenticatable
     public function mediaCollectionEvents(): array
     {
         return [
-            // Opțiune 1: Un singur event class pentru toate acțiunile
+            // Option 1: Single event class for all actions
             'profile_image_thumb'  => UserProfileImageUpdated::class,
             'profile_image_medium' => UserProfileImageUpdated::class,
             'profile_image_large'  => UserProfileImageUpdated::class,
 
-            // Opțiune 2: Evenimente diferite per acțiune
+            // Option 2: Different events per action
             // 'profile_image_thumb' => [
             //     'created' => UserProfileImageCreated::class,
             //     'updated' => UserProfileImageUpdated::class,
             //     'deleted' => UserProfileImageDeleted::class,
             // ],
 
-            // Opțiune 3: Callback direct
+            // Option 3: Direct callback
             // 'profile_image_thumb' => function ($user, $media, $action) {
             //     UserEvent::dispatch($user, [
             //         'target' => 'user-profile-image',
@@ -89,7 +89,7 @@ class User extends Authenticatable
 }
 ```
 
-## Metoda 2: Event Class cu suport pentru Broadcasting
+## Method 2: Event Class with Broadcasting Support
 
 ```php
 <?php
@@ -142,23 +142,23 @@ class UserProfileImageUpdated implements ShouldBroadcast
 }
 ```
 
-## Metoda 3: Callback direct în model
+## Method 3: Direct Callback in Model
 
 ```php
 public function mediaCollectionEvents(): array
 {
     return [
         'profile_image_thumb' => function ($user, $media, $action) {
-            // Poți face orice vrei aici
+            // You can do anything you want here
             UserEvent::dispatch($user, [
                 'target' => 'user-profile-image',
                 'action' => $action,
                 'collection' => $media?->collection,
             ]);
 
-            // Sau poți avea logică complexă
+            // Or you can have complex logic
             if ($action === 'created') {
-                // Notifică followers
+                // Notify followers
                 $user->followers->each(function ($follower) use ($user) {
                     $follower->notify(new UserProfileImageChanged($user));
                 });
@@ -172,7 +172,7 @@ public function mediaCollectionEvents(): array
 }
 ```
 
-## Metoda 4: Evenimente specifice per acțiune
+## Method 4: Action-Specific Events
 
 ```php
 public function mediaCollectionEvents(): array
@@ -180,15 +180,15 @@ public function mediaCollectionEvents(): array
     return [
         'profile_image_thumb' => [
             'created' => function ($user, $media, $action) {
-                // Logică specifică pentru creare
+                // Specific logic for creation
                 event(new UserProfileImageCreated($user, $media));
             },
             'updated' => function ($user, $media, $action) {
-                // Logică specifică pentru actualizare
+                // Specific logic for update
                 event(new UserProfileImageUpdated($user, $media));
             },
             'deleted' => function ($user, $media, $action) {
-                // Logică specifică pentru ștergere
+                // Specific logic for deletion
                 event(new UserProfileImageDeleted($user, $media));
             },
         ],
@@ -196,13 +196,13 @@ public function mediaCollectionEvents(): array
 }
 ```
 
-## Metoda 5: Combinație de toate colecțiile profile_image
+## Method 5: Combined Events for All profile_image Collections
 
 ```php
 public function mediaCollectionEvents(): array
 {
     $profileImageEvent = function ($user, $media, $action) {
-        // Același event pentru toate cele 3 variante de profile_image
+        // Same event for all 3 profile_image variants
         UserEvent::dispatch($user, [
             'target' => 'user-profile-image',
             'action' => $action,
@@ -218,23 +218,23 @@ public function mediaCollectionEvents(): array
 }
 ```
 
-## Avantaje față de metoda anterioară:
+## Advantages Over Previous Method:
 
-1. **Totul în model** - Nu mai ai nevoie de listener separat
-2. **Type-safe** - Știi exact ce colecții au evenimente
-3. **Flexibil** - Poți folosi clase, callbacks sau combinații
-4. **Clean** - Logica este acolo unde trebuie (în model, lângă mediaCollection)
-5. **Testabil** - Mai ușor de testat decât un listener global
-6. **DRY** - Poți refolosi același callback/class pentru multiple colecții
+1. **Everything in the Model** - No need for a separate listener
+2. **Type-safe** - You know exactly which collections have events
+3. **Flexible** - You can use classes, callbacks, or combinations
+4. **Clean** - Logic is where it should be (in the model, next to mediaCollection)
+5. **Testable** - Easier to test than a global listener
+6. **DRY** - You can reuse the same callback/class for multiple collections
 
-## Notă importantă:
+## Important Note:
 
-Acum poți șterge listener-ul `ProfileImageUpdated` și să implementezi direct în model metoda `mediaCollectionEvents()`.
-Evenimentele se vor declanșa automat când media este created/updated/deleted.
+You can now delete the `ProfileImageUpdated` listener and implement the `mediaCollectionEvents()` method directly in the model.
+Events will be automatically dispatched when media is created/updated/deleted.
 
-## Salvarea fișierului original (keep_original)
+## Saving the Original File (keep_original)
 
-Poți configura o colecție să păstreze și fișierul original, neprocesat, alături de versiunile procesate:
+You can configure a collection to keep the original, unprocessed file alongside the processed versions:
 
 ```php
 public function mediaCollection(): array
@@ -243,7 +243,7 @@ public function mediaCollection(): array
         'gallery' => [
             'disk'          => 'public',
             'type'          => MediaType::Image,
-            'keep_original' => true, // Păstrează fișierul original
+            'keep_original' => true, // Keep the original file
             'width'         => 1200,
             'height'        => 800,
             'fit'           => 'cover',
@@ -255,44 +255,46 @@ public function mediaCollection(): array
         'documents' => [
             'disk'          => 'private',
             'type'          => MediaType::File,
-            'keep_original' => true, // Funcționează și pentru alte tipuri de fișiere
+            'keep_original' => true, // Works for other file types too
             'extensions'    => ['pdf'],
         ],
     ];
 }
 ```
 
-### Cum funcționează:
+### How It Works:
 
--   Când `keep_original` este `true`, fișierul original uploadat va fi salvat cu extensia `original.{ext}`
--   Pentru imagini: pe lângă versiunile procesate (webp, avif, etc.), vei avea și originalul nemodificat
--   Pentru alte tipuri de fișiere (video, audio, file): originalul va fi salvat alături de celelalte extensii definite
+-   When `keep_original` is `true`, the original uploaded file will be saved with the extension marker `original` in the database
+-   The actual file on disk will be saved as `{name}.original.{ext}` (e.g., `ulid.original.jpg`)
+-   For images: in addition to the processed versions (webp, avif, etc.), you will also have the unmodified original
+-   For other file types (video, audio, file): the original will be saved alongside the other defined extensions
 
-### Accesare:
+### Accessing:
 
 ```php
-// Accesează fișierul original
-$originalUrl = $product->getMediaUrl('gallery', 'original.jpg');
+// Access the original file
+$originalUrl = $product->getMediaUrl('gallery', 'original');
 
-// Sau prin colecție
+// Or through the collection
 $media = $product->getMediaCollection('gallery');
-$original = $media->get('original.jpg');
+$original = $media->get('original');
 
-// URL-ul originalului
+// URL of the original
 if ($original) {
     echo $original->url;
 }
 ```
 
-### Cazuri de utilizare:
+### Use Cases:
 
-1. **Imagini de înaltă calitate**: Pentru a permite descărcarea versiunii originale fără pierderi
-2. **Editare ulterioară**: Pentru a păstra materialul sursă pentru procesări viitoare
-3. **Arhivare**: Pentru backup și conformitate
-4. **Securitate**: Pentru a păstra dovada originalului în cazuri legale
+1. **High-Quality Images**: To allow downloading the original version without losses
+2. **Future Editing**: To preserve the source material for future processing
+3. **Archiving**: For backup and compliance
+4. **Security**: To keep proof of the original in legal cases
 
-### Notă:
+### Note:
 
--   `keep_original` este `false` by default pentru a economisi spațiu de stocare
--   Originalul va fi salvat întotdeauna cu numele pattern: `original.{extension_originala}`
--   Funcționează pentru toate tipurile de media: Image, Video, Audio, File
+-   `keep_original` is `false` by default to save storage space
+-   The original will be stored with extension marker `original` in the database
+-   The file on disk will be saved as `{name}.original.{original_extension}`
+-   Works for all media types: Image, Video, Audio, File
