@@ -279,6 +279,12 @@ class MediaService
 		return $this->storeBinaryFile($config, $metadata);
 	}
 
+	/**
+	 * Resolve the filename for the uploaded file.
+	 *
+	 * @param string|null $pattern Optional pattern for filename generation
+	 * @return string
+	 */
 	protected function resolveFileName(?string $pattern = null): string
 	{
 		if (blank($pattern) && $this->useOriginalFileName && $this->file instanceof UploadedFile)
@@ -286,24 +292,42 @@ class MediaService
 			$original = pathinfo($this->file->getClientOriginalName(), PATHINFO_FILENAME);
 			$slug     = Str::slug((string) $original);
 
-			if (!blank($slug))
+			if ($slug !== '' && $slug !== null)
 			{
 				return $slug;
 			}
 		}
 
-		$pattern = blank($pattern) ? '{ulid}' : $pattern;
+		if (blank($pattern))
+		{
+			$pattern = '{ulid}';
+		}
 
 		return $this->patternBuilder($pattern);
 	}
 
+	/**
+	 * Resolve the storage path for the uploaded file.
+	 *
+	 * @param string|null $pattern Optional pattern for path generation
+	 * @return string
+	 */
 	protected function resolvePath(?string $pattern = null): string
 	{
-		$pattern = blank($pattern) ? '{model}/{collection}' : $pattern;
+		if (blank($pattern))
+		{
+			$pattern = '{model}/{collection}';
+		}
 
 		return $this->patternBuilder($pattern);
 	}
 
+	/**
+	 * Build a path or filename from a pattern with placeholders.
+	 *
+	 * @param string $pattern Pattern with placeholders like {ulid}, {uuid}, {model}, {collection}
+	 * @return string
+	 */
 	protected function patternBuilder(string $pattern): string
 	{
 		return str($pattern)
@@ -317,6 +341,13 @@ class MediaService
 			->toString();
 	}
 
+	/**
+	 * Resolve image extensions and their quality settings from configuration.
+	 *
+	 * @param array $config Configuration array
+	 * @return array Array of extensions with quality values
+	 * @throws InvalidArgumentException
+	 */
 	protected function resolveImageExtensions(array $config): array
 	{
 		$extensions = $config['extensions'] ?? null;
@@ -353,6 +384,14 @@ class MediaService
 		return [strtolower($guessed) => 100];
 	}
 
+	/**
+	 * Store a binary file (video, audio, or generic file) to disk.
+	 *
+	 * @param array $config Configuration for the file storage
+	 * @param array $metadata Optional metadata
+	 * @return Collection
+	 * @throws InvalidArgumentException
+	 */
 	protected function storeBinaryFile(array $config = [], array $metadata = []): Collection
 	{
 		$name         = $this->resolveFileName($config['name'] ?? null);
@@ -401,11 +440,29 @@ class MediaService
 		return $results;
 	}
 
+	/**
+	 * Build a relative file path from path, name, and extension.
+	 *
+	 * @param string $path The directory path
+	 * @param string $name The filename without extension
+	 * @param string $extension The file extension
+	 * @return string
+	 */
 	protected function buildRelativePath(string $path, string $name, string $extension): string
 	{
 		return trim($path . '/' . $name . '.' . $extension, '/');
 	}
 
+	/**
+	 * Persist media record to the database.
+	 *
+	 * @param string $extension File extension
+	 * @param string $relativePath Relative path to the file
+	 * @param string $disk Storage disk name
+	 * @param array $metadata Optional metadata
+	 * @param Filesystem|null $storage Optional filesystem instance
+	 * @return mixed
+	 */
 	protected function persistMediaRecord(string $extension, string $relativePath, string $disk, array $metadata = [], ?Filesystem $storage = null)
 	{
 		$storage ??= Storage::disk($disk);
@@ -424,6 +481,14 @@ class MediaService
 			]);
 	}
 
+	/**
+	 * Write file stream to storage.
+	 *
+	 * @param Filesystem $storage Filesystem instance
+	 * @param string $relativePath Relative path to store the file
+	 * @return void
+	 * @throws RuntimeException
+	 */
 	protected function writeStream(Filesystem $storage, string $relativePath): void
 	{
 		$resource = fopen($this->file->getRealPath(), 'r');
@@ -441,6 +506,12 @@ class MediaService
 		}
 	}
 
+	/**
+	 * Normalize extensions from configuration.
+	 *
+	 * @param array $config Configuration array
+	 * @return array
+	 */
 	protected function normalizeExtensions(array $config): array
 	{
 		if (isset($config['extensions']) && is_array($config['extensions']) && !empty($config['extensions']))
@@ -482,6 +553,12 @@ class MediaService
 		return strtolower(ltrim((string) $extension, '.'));
 	}
 
+	/**
+	 * Guess the file extension from an uploaded file.
+	 *
+	 * @param UploadedFile $file The uploaded file
+	 * @return string|null
+	 */
 	protected function guessExtension(UploadedFile $file): ?string
 	{
 		return strtolower(
@@ -492,6 +569,12 @@ class MediaService
 		) ?: null;
 	}
 
+	/**
+	 * Detect media type from uploaded file MIME type.
+	 *
+	 * @param UploadedFile $file The uploaded file
+	 * @return MediaType
+	 */
 	protected function detectType(UploadedFile $file): MediaType
 	{
 		$mimeType = $file->getMimeType();
@@ -537,10 +620,11 @@ class MediaService
 	}
 
 	/**
-	 * Convert URL to UploadedFile instance
+	 * Convert URL to UploadedFile instance.
 	 *
-	 * @param string $url
+	 * @param string $url The URL to download
 	 * @return UploadedFile
+	 * @throws Exception
 	 */
 	protected function urlToUploadedFile(string $url): UploadedFile
 	{
